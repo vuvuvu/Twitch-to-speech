@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser TTS Demo</title>
+    <!-- Add Comfy.js -->
+    <script src="https://cdn.jsdelivr.net/npm/comfy.js@latest/dist/comfy.min.js"></script>
+    <style>
+        :root {
+            --bg: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text: #e0e0e0;
+            --accent: #646cff;
+            --error: #ff4444;
+            --success: #00cc00;
+        }
+        
+        body { 
+            font-family: system-ui;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        h1 {
+            color: var(--accent);
+        }
+
+        select, textarea, button, input[type="range"] { 
+            display: block;
+            width: 100%;
+            margin: 1rem 0;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            color: var(--text);
+            border: 1px solid #404040;
+            border-radius: 4px;
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        select:focus, textarea:focus, input[type="range"]:focus {
+            outline: 1px solid var(--accent);
+        }
+
+        #error { 
+            color: var(--error);
+            margin: 1rem 0;
+            display: none;
+            padding: 0.75rem;
+            background: rgba(255, 68, 68, 0.1);
+            border-radius: 4px;
+        }
+
+        #status { 
+            color: var(--success);
+            margin: 1rem 0;
+            display: none;
+            padding: 0.75rem;
+            background: rgba(0, 204, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        select option {
+            background: var(--bg-secondary);
+        }
+        
+        .control-group {
+            margin-bottom: 1rem;
+        }
+        
+        .muted-users {
+            background: var(--bg-secondary);
+            padding: 0.75rem;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Twitch Chat Text-to-Speech</h1>
+    <p>Note: Available voices depend on your browser and system. Messages from Twitch chat will be spoken automatically.</p>
+
+    <div>
+        <label for="channel">Twitch Channel:</label>
+        <input type="text" id="channel" placeholder="Enter channel name">
+        <button onclick="connectToTwitch()">Connect</button>
+    </div>
+
+    <div class="control-group">
+        <label for="voiceSelect">Select Voice:</label>
+        <select id="voiceSelect"></select>
+    </div>
+    <div class="control-group">
+        <label for="rate">Rate:</label>
+        <input type="range" id="rate" min="0.5" max="2" value="1" step="0.25">
+    </div>
+    <div class="control-group">
+        <label for="pitch">Pitch:</label>
+        <input type="range" id="pitch" min="0" max="2" value="1" step="0.1">
+    </div>
+    <div class="control-group">
+        <label for="volume">Volume:</label>
+        <input type="range" id="volume" min="0" max="1" value="1" step="0.1">
+    </div>
+    
+    <div class="muted-users">
+        <label for="mutedUsers">Muted Users:</label>
+        <input type="text" id="mutedUsers" placeholder="streamelementsbot, songlistbot, nightbot, ">
+    </div>
+
+    <div id="error"></div>
+    <div id="status"></div>
+
+    <script>
+        let synthesis = window.speechSynthesis;
+        let voices = [];
+        let userVoices = new Map(); // Store user -> voice assignments
+        let mutedUsers = new Set();
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.style.display = 'block';
+            document.getElementById('status').style.display = 'none';
+        }
+
+        function showStatus(message) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function getRandomVoice() {
+            return voices[Math.floor(Math.random() * voices.length)];
+        }
+
+        function connectToTwitch() {
+            const channel = document.getElementById('channel').value.toLowerCase();
+            if (!channel) {
+                showError('Please enter a channel name');
+                return;
+            }
+
+            ComfyJS.onChat = (user, message, flags, self, extra) => {
+                // Mute check
+                if(mutedUsers.has(user)) return;
+                
+                let selectedVoice;
+                
+                //Voice selection logic
+                const voiceSelect = document.getElementById('voiceSelect');
+                
+                if (voiceSelect.value == "random"){
+                    if (!userVoices.has(user)) {
+                        userVoices.set(user, getRandomVoice());
+                    }
+                    selectedVoice = userVoices.get(user);
+                } else {
+                    selectedVoice = voices.find(v => v.name === voiceSelect.value);
+                }
+                
+                if (!selectedVoice){
+                    showError(`Could not find the selected voice.`)
+                } else {
+                
+                    const utterance = new SpeechSynthesisUtterance(message);
+                    utterance.voice = selectedVoice;
+                    
+                    //rate and pitch logic
+                    utterance.rate = parseFloat(document.getElementById('rate').value);
+                    utterance.pitch = parseFloat(document.getElementById('pitch').value);
+                    utterance.volume = parseFloat(document.getElementById('volume').value);
+                    
+                    utterance.onend = () => showStatus(`Finished speaking (message) from ${user}`);
+                    utterance.onerror = (e) => showError(`Speech error: ${e.error}`);
+                    
+                    synthesis.speak(utterance);
+                    showStatus(`Speaking (message) from ${user}...`);
+                }
+            };
+
+            ComfyJS.Init(channel);
+            showStatus(`Connected to ${channel}'s chat`);
+        }
+
+        function loadVoices() {
+            try {
+                voices = synthesis.getVoices().filter(voice => 
+                    voice.lang.startsWith('en') && 
+                    !voice.name.toLowerCase().includes('neural') && 
+                    !voice.name.toLowerCase().includes('online') &&
+                    !voice.name.toLowerCase().includes('artificial') &&
+                    !voice.name.toLowerCase().includes('synthesized')
+                );
+                const voiceSelect = document.getElementById('voiceSelect');
+                voiceSelect.innerHTML = ''; // Clear existing options
+
+                if (voices.length === 0) {
+                    showError('No English human voices available in your browser');
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = "No English human voices available";
+                    voiceSelect.appendChild(option);
+                } else {
+                    const randomOption = document.createElement('option');
+                    randomOption.value = "random";
+                    randomOption.textContent = "Random English Human Voice (per user)";
+                    voiceSelect.appendChild(randomOption);
+                    
+                    voices.forEach(voice => {
+                        const option = document.createElement('option');
+                        option.value = voice.name;
+                        option.textContent = `${voice.name} (${voice.lang})`;
+                        voiceSelect.appendChild(option);
+                    });
+                    showStatus(`${voices.length} English human voices loaded and ready for chat`);
+                }
+            } catch (e) {
+                showError('Error loading voices: ' + e.message);
+            }
+        }
+        
+        function loadMutedUsers(){
+            const mutedUsersInput = document.getElementById('mutedUsers');
+            mutedUsers = new Set(mutedUsersInput.value.toLowerCase().split(',').map(user => user.trim()).filter(user => user));
+        }
+        
+        // Event listener for muted users input
+        document.getElementById('mutedUsers').addEventListener('input', loadMutedUsers);
+
+        if (synthesis) {
+            if (synthesis.onvoiceschanged !== undefined) {
+                synthesis.onvoiceschanged = loadVoices;
+            }
+            loadVoices();
+            loadMutedUsers();
+        } else {
+            showError('Speech synthesis not supported in this browser');
+        }
+    </script>
+</body>
+</html>
