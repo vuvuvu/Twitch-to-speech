@@ -18,6 +18,15 @@ A browser-based Text-to-Speech application that reads Twitch chat messages aloud
 3. Select your preferred voice and adjust settings
 4. Click "Connect" to start listening to chat
 
+   ===
+
+## Overlay version 
+
+Created a branch overlay version will show the chat message while it reads TTS 
+-uses urlparams "http://localhost/?channel=twitch_channel" 
+so set that accordingly once you drag the "index.html" 
+into a browser or obs or however you display overlays
+
 ## Usage
 
 ### Voice Selection
