@@ -138,17 +138,42 @@
             margin: 0;
             padding: 0;
         }
+
+        .header-text {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .twitch-connect {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-secondary);
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        #channel {
+            flex-grow: 1;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
-    <h1>Twitch Chat Text-to-Speech</h1>
-    <i><p>made with 💩 by <a href="https://github.io/vuvuvu" target="_blank"><b>vU_Vu</b></a></i></p>
-
-    <div>
-        <label for="channel">Twitch Channel: <input type="text" id="channel" placeholder="Enter channel name"></label>
-        <button onclick="connectToTwitch()">Connect</button>
-
+    <div class="header-text">
+        <h1>Twitch Chat Text-to-Speech</h1>
+        <i><p>made with 💩 by <a href="https://github.io/vuvuvu" target="_blank"><b>vU_Vu</b></a></i></p>
     </div>
+
+    <div class="twitch-connect">
+        <label for="channel">Twitch Channel:</label>
+        <input type="text" id="channel" placeholder="Enter channel name">
+        <div class="checkbox-container">
+            <input type="checkbox" id="confirmConnect">
+            <label for="confirmConnect">Connect</label>
+        </div>
+    </div>
+
     <div id="error"></div>
     <div id="status"></div>
     <div class="chat-display" id="chatDisplay">
@@ -286,6 +311,23 @@
             showStatus(`Connected to ${channel}'s chat`);
         }
 
+        function tryConnectToTwitch() {
+            const channel = document.getElementById('channel').value.toLowerCase();
+            const confirmCheckbox = document.getElementById('confirmConnect');
+            
+            if (!channel) {
+                showError('Please enter a channel name');
+                return;
+            }
+            
+            if (!confirmCheckbox.checked) {
+                showError('Please confirm connection');
+                return;
+            }
+            
+            connectToTwitch();
+        }
+
         function loadVoices() {
             try {
                 const systemVoices = synthesis.getVoices();
@@ -337,6 +379,22 @@
         });
         
         document.getElementById('confirmMuted').addEventListener('change', loadMutedUsers);
+
+        document.getElementById('channel').addEventListener('input', () => {
+            document.getElementById('confirmConnect').checked = false;
+        });
+
+        document.getElementById('confirmConnect').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                const channel = document.getElementById('channel').value.toLowerCase();
+                if (!channel) {
+                    showError('Please enter a channel name');
+                    e.target.checked = false;
+                    return;
+                }
+                connectToTwitch();
+            }
+        });
 
         if (synthesis) {
             if (synthesis.onvoiceschanged !== undefined) {
