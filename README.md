@@ -4,8 +4,8 @@ A browser-based Text-to-Speech application that reads Twitch chat messages aloud
 
 ## Features
 
-- Real-time Twitch chat message reading
-- Customizable voice selection (per-user or fixed voice)
+- Real-time Twitch chat message reading [now with scrolling chat]
+- No Login required, try it out (here)[https://vuvuvu.github.io/Twitch-to-speech/]
 - Adjustable speech rate, pitch, and volume
 - Mute list for bots and unwanted users
 - Dark theme interface
@@ -17,6 +17,7 @@ A browser-based Text-to-Speech application that reads Twitch chat messages aloud
 2. Enter your Twitch channel name
 3. Select your preferred voice and adjust settings
 4. Click "Connect" to start listening to chat
+
 
 ## Usage
 
@@ -46,6 +47,5 @@ Works best in modern browsers that support the Web Speech API:
 
 Feel free to open issues or submit pull requests if you have suggestions for improvements!
 
-## License
 
-MIT License - feel free to use and modify as needed.
+
