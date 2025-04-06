@@ -19,8 +19,8 @@
         body { 
             font-family: system-ui;
             max-width: 600px;
-            margin: 1 rem auto;
-            padding: 1 rem;
+            margin: 1rem auto;
+            padding: 0.5rem;
             background: var(--bg);
             color: var(--text);
         }
@@ -32,17 +32,17 @@
         select, textarea, button, input[type="range"] { 
             display: block;
             width: 100%;
-            margin: 1 rem ;
-            padding: 1 rem ;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
             background: var(--bg-secondary);
             color: var(--text);
-            border: 1pxx solid #804040;
-            border-radius: 1px;
+            border: 1px solid #804040;
+            border-radius: 4px;
         }
 
         .chat-display {
-            margin: 1 rem 0;
-            padding: 1 rem;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
             background: var(--bg-secondary);
             border-radius: 1px;
             max-height: 500px;
@@ -50,8 +50,8 @@
         }
 
         .chat-message {
-            padding: 0.5rem;
-            margin: 0.5rem 0;
+            padding: 0.25rem;
+            margin: 0.25rem 0;
             background: var(--bg);
             border-radius: 1px;
         }
@@ -80,20 +80,20 @@
 
         #error { 
             color: var(--error);
-            margin: 1rem 0;
+            margin: 0.25rem 0;
             display: none;
-            padding: 1rem;
+            padding: 0.5rem;
             background: rgba(255, 68, 68, 0.1);
             border-radius: 2px;
         }
 
         #status { 
             color: var(--success);
-            margin: 0,4 rem 0;
+            margin: 0.25rem 0;
             display: none;
-            padding: 1rem;
+            padding: 0.5rem;
             background: rgba(0, 0, 0, 0);
-            border-radius: 1px;
+            border-radius: 4px;
         }
 
         textarea {
@@ -106,13 +106,37 @@
         }
         
         .control-group {
-            margin-bottom: rem;
+            margin-bottom: 0.5rem;
         }
         
         .muted-users {
             background: var(--bg-secondary);
-            padding: rem;
-            border-radius: 1px;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .muted-users-input {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #mutedUsers {
+            flex-grow: 1;
+            margin: 0;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        #confirmMuted {
+            width: auto;
+            margin: 0;
+            padding: 0;
         }
     </style>
 </head>
@@ -142,8 +166,14 @@
     </div>
     
     <div class="muted-users">
-        <label for="mutedUsers">Muted Users:</label>
-        <input type="text" id="mutedUsers" placeholder="streamelements, songlistbot, nightbot ">
+        <div class="muted-users-input">
+            <label for="mutedUsers">Muted Users:</label>
+            <input type="text" id="mutedUsers" placeholder="streamelements, songlistbot, nightbot">
+            <div class="checkbox-container">
+                <input type="checkbox" id="confirmMuted">
+                <label for="confirmMuted">Confirm</label>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -154,7 +184,6 @@
             "Catherine (en-AU)",
             "Daniel (English (United Kingdom)) (en-GB)",
             "Gordon (en-AU)",
-            "Junior (en-US)",
             "Karen (en-AU)",
             "Matilda (en-AU)",
             "Nicky (en-US)"
@@ -291,11 +320,23 @@
         
         function loadMutedUsers(){
             const mutedUsersInput = document.getElementById('mutedUsers');
-            mutedUsers = new Set(mutedUsersInput.value.toLowerCase().split(',').map(user => user.trim()).filter(user => user));
+            const confirmCheckbox = document.getElementById('confirmMuted');
+            
+            if (confirmCheckbox.checked) {
+                mutedUsers = new Set(mutedUsersInput.value.toLowerCase().split(',').map(user => user.trim()).filter(user => user));
+                showStatus(`Muted users updated: ${Array.from(mutedUsers).join(', ')}`);
+            } else {
+                mutedUsers.clear();
+            }
         }
         
-        // Event listener for muted users input
-        document.getElementById('mutedUsers').addEventListener('input', loadMutedUsers);
+        // Event listeners
+        document.getElementById('mutedUsers').addEventListener('input', () => {
+            document.getElementById('confirmMuted').checked = false;
+            mutedUsers.clear();
+        });
+        
+        document.getElementById('confirmMuted').addEventListener('change', loadMutedUsers);
 
         if (synthesis) {
             if (synthesis.onvoiceschanged !== undefined) {
