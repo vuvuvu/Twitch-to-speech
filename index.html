@@ -292,7 +292,10 @@
                         showError(`Error speaking message from ${user}: ${e.error}`);
                         console.error('Speech synthesis error:', e);
                     };
-                    utterance.onerror = (e) => showError(`Speech error: ${e.error}`);
+                    utterance.onerror = (e) => {
+                        showError(`Speech error: ${e.error}`);
+                        console.error('Speech synthesis error:', e);
+                    };
                     
                     synthesis.speak(utterance);
                     showStatus(`${user} 's message spoken by ${selectedVoice.name}`);
@@ -365,7 +368,8 @@
             const confirmCheckbox = document.getElementById('confirmMuted');
             
             if (confirmCheckbox.checked) {
-                mutedUsers = new Set(mutedUsersInput.value.toLowerCase().split(',').map(user => user.trim()).filter(user => user));
+                const mutedUsersInputValue = mutedUsersInput.value || ''; // Ensure value is not null or undefined
+                mutedUsers = new Set(mutedUsersInputValue.toLowerCase().split(',').map(user => user.trim()).filter(user => user));
                 showStatus(`Muted users updated: ${Array.from(mutedUsers).join(', ')}`);
             } else {
                 mutedUsers.clear();
