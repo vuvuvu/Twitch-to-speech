@@ -40,6 +40,28 @@
             border-radius: 4px;
         }
 
+        .chat-display {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            background: var(--bg);
+            border-radius: 4px;
+        }
+
+        .chat-message .user {
+            color: var(--accent);
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
         button {
             background: var(--accent);
             color: white;
@@ -104,9 +126,13 @@
         <button onclick="connectToTwitch()">Connect</button>
     </div>
 
+    <div class="chat-display" id="chatDisplay">
+        <!-- Chat messages will appear here -->
+    </div>
+
     <div class="control-group">
         <label for="rate">Rate:</label>
-        <input type="range" id="rate" min="0.5" max="2" value="1" step="0.25">
+        <input type="range" id="rate" min="0.8" max="1.6" value="1" step="0.2">
     </div>
     <div class="control-group">
         <label for="pitch">Pitch:</label>
@@ -114,7 +140,7 @@
     </div>
     <div class="control-group">
         <label for="volume">Volume:</label>
-        <input type="range" id="volume" min="0" max="1" value="1" step="0.1">
+        <input type="range" id="volume" min="0" max="1" value="1" step="0.2">
     </div>
     
     <div class="muted-users">
@@ -164,6 +190,7 @@
         }
 
         function getRandomVoice() {
+            if (voices.length === 0) return null;
             return voices[Math.floor(Math.random() * voices.length)];
         }
 
@@ -194,6 +221,7 @@
                 return;
             }
 
+    
             ComfyJS.onChat = (user, message, flags, self, extra) => {
                 // Mute check
                 if(mutedUsers.has(user)) return;
@@ -224,6 +252,14 @@
                     synthesis.speak(utterance);
                     showStatus(`Speaking message from ${user}...`);
                 }
+
+                // Display chat message
+                const chatDisplay = document.getElementById('chatDisplay');
+                const chatMessage = document.createElement('div');
+                chatMessage.className = 'chat-message';
+                chatMessage.innerHTML = `<span class="user">${user}:</span> ${message}`;
+                chatDisplay.appendChild(chatMessage);
+                chatDisplay.scrollTop = chatDisplay.scrollHeight;
             };
 
             ComfyJS.Init(channel);
@@ -233,16 +269,32 @@
         function loadVoices() {
             try {
                 const systemVoices = synthesis.getVoices();
-                const availableVoices = systemVoices.filter(voice => voices.some(v => voice.name.includes(v.split(' (')[0])));
-                
-                if (availableVoices.length === 0) {
-                    showError('None of the required voices are available in your browser');
-                } else {
-                    voices = availableVoices;
-                    showStatus(`${voices.length} voices loaded and ready for chat`);
+                if (systemVoices.length === 0) {
+                    showError('No system voices available. Please check your browser settings.');
+                    return;
                 }
+                
+                // Find matching system voices for our predefined list
+                const matchedVoices = [];
+                for (const systemVoice of systemVoices) {
+                    const voiceName = `${systemVoice.name} (${systemVoice.lang})`;
+                    if (voices.includes(voiceName)) {
+                        matchedVoices.push(systemVoice);
+                    }
+                }
+                
+                if (matchedVoices.length === 0) {
+                    showError('No matching voices found. Available voices: ' + 
+                        systemVoices.map(v => `${v.name} (${v.lang})`).join(', '));
+                    return;
+                }
+                
+                voices = matchedVoices;
+                showStatus(`${voices.length} voices loaded and ready for chat`);
+                console.log('Loaded voices:', voices.map(v => `${v.name} (${v.lang})`));
             } catch (e) {
                 showError('Error loading voices: ' + e.message);
+                console.error('Voice loading error:', e);
             }
         }
         
