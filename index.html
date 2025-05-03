@@ -368,7 +368,7 @@
             };
 
             // Add a potential error handler
-            ComfyJS.onError = (err) => {
+            ComfyJS.onError = (err) => {         
                 console.error('ComfyJS Error:', err);
                 showError(`ComfyJS connection failed: ${err}`);
                 isConnected = false; // Ensure state is correct
