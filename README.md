@@ -2,9 +2,8 @@
 
 
 A browser-based [Text-to-Speech](https://vuvuvu.github.io/Twitch-to-speech/) application that reads Twitch chat messages aloud using your system's available voices. It allows you to quickly follow the chat without having to read it, making it useful while driving (in-game or real life!), walking, or any situation where your eyes need to be focused elsewhere. It's also great for streamers who want to hear their chat while focusing on gameplay.
-
 **TLDR** *Listen to chat while exercising, driving, intensive gaming, walking or when too lazy to read.*
-
+=======
 ## Features
 
 - Real-time Twitch chat message reading that scrolls with chat 
@@ -18,9 +17,11 @@ A browser-based [Text-to-Speech](https://vuvuvu.github.io/Twitch-to-speech/) app
    **[CLICK HERE TO USE](https://vuvuvu.github.io/Twitch-to-speech/)**
 
 1. Open `index.html` in a modern web browser
+
 2. Enter a twitch channel name and press >connect
     a. If on mobile browser, also click a new button to allows audio 
 
+  
 ### Controls
 - **Rate**: Adjust how fast the messages are read (0.5x - 2x)
 - **Pitch**: Change the voice pitch (0 - 2)
@@ -47,6 +48,17 @@ Idea was hugely inspired by [Steve Seguin's](https://github.com/steveseguin) and
  [MDN Web Speech API Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API)
  
  [Talking webpages and the speech synthesis api](https://www.sitepoint.com/talking-web-pages-and-the-speech-synthesis-api/)
+
+=======
+
+Idea was hugely inspired by [Steve Seguin's](https://github.com/steveseguin) and their [basic-tts-test](https://github.com/steveseguin/basic-tts-test) project.
+
+ [Instafluff](https://twitch.tv/instafluff) and the ever useful [ComfyJS](https://github.com/instafluff/comfyjs) library
+
+ [MDN Web Speech API Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API)
+ 
+ [Talking webpages and the speech synthesis api](https://www.sitepoint.com/talking-web-pages-and-the-speech-synthesis-api/)
+
 
 ## Contributing
 
