@@ -157,20 +157,38 @@
             flex-grow: 1;
             margin: 0;
         }
+        
+        /* Style for muted users display */
+        .muted-users-list {
+            font-size: 0.9em;
+            color: var(--text);
+            opacity: 0.8;
+            min-height: 1.2em; /* Ensure space even when empty */
+        }
+
+        /* Style for speaking indicator */
+        .chat-message.speaking {
+            background-color: var(--accent);
+            color: white;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .chat-message.speaking .user {
+             color: white; /* Ensure user name is visible */
+        }
     </style>
 </head>
 <body>
     <div class="header-text">
         <h1>Twitch Chat Text-to-Speech</h1>
-        <i><p>made with 💩 by <a href="https://github.io/vuvuvu" target="_blank"><b>vU_Vu</b></a></i></p>
+        <i><p>made with 💩 by <a href="https://github.com/vuvuvu" target="_blank" rel="noopener"><b>vU_Vu</b></a></i></p>
     </div>
 
     <div class="twitch-connect">
         <label for="channel">Twitch Channel:</label>
         <input type="text" id="channel" placeholder="Enter channel name">
         <div class="checkbox-container">
-            <input type="checkbox" id="confirmConnect">
-            <label for="confirmConnect">Connect</label>
+             <input type="checkbox" id="confirmConnect">
+             <label for="confirmConnect">Connect</label>
         </div>
     </div>
 
@@ -194,16 +212,17 @@
         <div class="muted-users-input">
             <label for="mutedUsers">Muted Users:</label>
             <input type="text" id="mutedUsers" placeholder="streamelements, songlistbot, nightbot">
-            <div class="checkbox-container">
-                <input type="checkbox" id="confirmMuted">
-                <label for="confirmMuted">Confirm</label>
-            </div>
+            <button id="updateMutedBtn">Update Muted List</button>
         </div>
+        <div id="mutedUsersDisplay" class="muted-users-list" style="margin-top: 0.5rem;"></div>
     </div>
+    
+    <button id="clearChatBtn" style="margin-top: 0.5rem;">Clear Chat Log</button>
 
     <script>
         let synthesis = window.speechSynthesis;
-        let voices = [
+        // Keep the original list of desired names separate and constant
+        const desiredVoiceNames = [
             "Aaron (en-US)",
             "Arthur (en-GB)",
             "Catherine (en-AU)",
@@ -213,21 +232,38 @@
             "Matilda (en-AU)",
             "Nicky (en-US)"
         ];
+        // This will hold the actual SpeechSynthesisVoice objects that match
+        let voices = [];
         let userVoices = new Map(); // Store user -> voice assignments
         let mutedUsers = new Set();
 
+        // Cache DOM elements (ensure these IDs exist in your HTML)
+        const channelInput = document.getElementById('channel');
+        const confirmConnectCheckbox = document.getElementById('confirmConnect'); // Re-add checkbox
+        const errorDiv = document.getElementById('error');
+        const statusDiv = document.getElementById('status');
+        const chatDisplay = document.getElementById('chatDisplay');
+        const rateSlider = document.getElementById('rate');
+        const pitchSlider = document.getElementById('pitch');
+        const volumeSlider = document.getElementById('volume');
+        const mutedUsersInput = document.getElementById('mutedUsers');
+        const updateMutedBtn = document.getElementById('updateMutedBtn');
+        const mutedUsersDisplay = document.getElementById('mutedUsersDisplay');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+        const MAX_CHAT_MESSAGES = 150; // Define max messages
+
         function showError(message) {
-            const error = document.getElementById('error');
-            error.textContent = message;
-            error.style.display = 'block';
-            document.getElementById('status').style.display = 'none';
+            if (!errorDiv) return; // Guard clause
+            errorDiv.textContent = `[Error] ${message}`; // Use cached element
+            errorDiv.style.display = 'block';
+            if (statusDiv) statusDiv.style.display = 'none'; // Use cached element
         }
 
         function showStatus(message) {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.style.display = 'block';
-            document.getElementById('error').style.display = 'none';
+            if (!statusDiv) return; // Guard clause
+            statusDiv.textContent = `[Status] ${message}`; // Use cached element
+            statusDiv.style.display = 'block';
+            if (errorDiv) errorDiv.style.display = 'none'; // Use cached element
         }
 
         function getRandomVoice() {
@@ -255,81 +291,127 @@
             return uniqueWords.join(' ');
         }
 
-        function connectToTwitch() {
-            const channel = document.getElementById('channel').value.toLowerCase();
-            if (!channel) {
-                showError('Please enter a channel name');
-                return;
-            }
+        let isConnected = false; // Keep track of connection state
 
-    
+        function connectToTwitch(channel) {
+            showStatus(`[Connecting...] to ${channel}`);
+            console.log(`Attempting to connect to channel: ${channel}`);
+            channelInput.disabled = true; // Disable input during connection attempt
+            confirmConnectCheckbox.disabled = true; // Disable checkbox during attempt
+
+            // Clear previous handlers? (Optional, might be needed if reconnecting)
+            // ComfyJS.onError = null;
+            // ComfyJS.onConnected = null;
+            // ComfyJS.onChat = null;
+
             ComfyJS.onChat = (user, message, flags, self, extra) => {
                 // Mute check
-                if(mutedUsers.has(user)) return;
-                
+                if (mutedUsers.has(user)) return;
+
+                // Display chat message first
+                const chatMessage = document.createElement('div');
+                chatMessage.className = 'chat-message';
+                chatMessage.innerHTML = `<span class="user">${user}:</span> ${message}`; // Use original message for display
+                chatDisplay.appendChild(chatMessage);
+
+                // Limit chat messages
+                while (chatDisplay.children.length > MAX_CHAT_MESSAGES) {
+                    chatDisplay.removeChild(chatDisplay.firstChild);
+                }
+                chatDisplay.scrollTop = chatDisplay.scrollHeight; // Scroll to bottom
+
+                // --- Speech Synthesis Logic ---
                 // Get or assign a random voice for the user
                 if (!userVoices.has(user)) {
                     userVoices.set(user, getRandomVoice());
                 }
                 const selectedVoice = userVoices.get(user);
-                
-                // Filter the message before processing
+
+                // Filter the message for speech
                 const filteredMessage = filterMessage(message);
-                
+
                 if (!selectedVoice) {
                     showError(`Could not find a voice for ${user}.`);
-                } else {
+                } else if (filteredMessage.trim()) { // Only speak if there's content after filtering
                     const utterance = new SpeechSynthesisUtterance(filteredMessage);
                     utterance.voice = selectedVoice;
-                    
-                    //rate and pitch logic
-                    utterance.rate = parseFloat(document.getElementById('rate').value);
-                    utterance.pitch = parseFloat(document.getElementById('pitch').value);
-                    utterance.volume = parseFloat(document.getElementById('volume').value);
-                    
-                    utterance.onend = () => showStatus(`${user} chat spoken by ${selectedVoice.name}`);
-                    utterance.onerror = (e) => {
-                        showError(`Error speaking message from ${user}: ${e.error}`);
-                        console.error('Speech synthesis error:', e);
-                    };
-                    utterance.onerror = (e) => {
-                        showError(`Speech error: ${e.error}`);
-                        console.error('Speech synthesis error:', e);
-                    };
-                    
-                    synthesis.speak(utterance);
-                    showStatus(`${user} 's message spoken by ${selectedVoice.name}`);
-                }
+                    utterance.rate = parseFloat(rateSlider.value);
+                    utterance.pitch = parseFloat(pitchSlider.value);
+                    utterance.volume = parseFloat(volumeSlider.value);
 
-                // Display chat message
-                const chatDisplay = document.getElementById('chatDisplay');
-                const chatMessage = document.createElement('div');
-                chatMessage.className = 'chat-message';
-                chatMessage.innerHTML = `<span class="user">${user}:</span> ${message}`;
-                chatDisplay.appendChild(chatMessage);
-                chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                    utterance.onstart = () => {
+                        chatMessage.classList.add('speaking'); // Add speaking indicator
+                        showStatus(`[Speaking] ${user}: ${filteredMessage.substring(0, 30)}...`);
+                    };
+                    utterance.onend = () => {
+                        chatMessage.classList.remove('speaking'); // Remove indicator
+                        showStatus(`[Idle] Last spoken: ${user}`);
+                    };
+                    utterance.onerror = (e) => {
+                        chatMessage.classList.remove('speaking'); // Remove indicator
+                        showError(`Speech error for ${user}: ${e.error}`);
+                        console.error('Speech synthesis error:', e);
+                    };
+
+                    synthesis.speak(utterance);
+                }
             };
 
-            ComfyJS.Init(channel);
-            showStatus(`Connected to ${channel}'s chat`);
+            // Standard Connected Handler
+            ComfyJS.onConnected = (address, port, isFirstConnect) => {
+                console.log(`ComfyJS connected successfully to ${channelInput.value}`);
+                isConnected = true;
+                // Keep input and checkbox disabled while connected
+                channelInput.disabled = true;
+                confirmConnectCheckbox.disabled = false; // Re-enable checkbox (to allow disconnect)
+                showStatus(`[Connected] to ${channelInput.value}`);
+            };
+
+            // Add a potential error handler
+            ComfyJS.onError = (err) => {
+                console.error('ComfyJS Error:', err);
+                showError(`ComfyJS connection failed: ${err}`);
+                isConnected = false; // Ensure state is correct
+                // Reset UI
+                confirmConnectCheckbox.checked = false;
+                confirmConnectCheckbox.disabled = false;
+                channelInput.disabled = false;
+            };
+
+            // Basic disconnect handling (triggered by unchecking the box)
+            // We rely on the checkbox state change event listener below.
+
+            console.log(`Calling ComfyJS.Init("${channel}")`);
+            try {
+                 ComfyJS.Init(channel);
+                 // Note: Init might be asynchronous, the real success is indicated by onConnected
+            } catch (initError) {
+                 console.error('Error during ComfyJS.Init call:', initError);
+                 showError(`Failed to initialize connection: ${initError.message}`);
+                 // Reset UI
+                 isConnected = false;
+                 confirmConnectCheckbox.checked = false;
+                 confirmConnectCheckbox.disabled = false;
+                 channelInput.disabled = false;
+            }
         }
 
-        function tryConnectToTwitch() {
-            const channel = document.getElementById('channel').value.toLowerCase();
-            const confirmCheckbox = document.getElementById('confirmConnect');
-            
-            if (!channel) {
-                showError('Please enter a channel name');
-                return;
-            }
-            
-            if (!confirmCheckbox.checked) {
-                showError('Please confirm connection');
-                return;
-            }
-            
-            connectToTwitch();
+        // Simplified disconnect logic for checkbox
+        function disconnectFromTwitch() {
+             if (typeof ComfyJS.Disconnect === 'function') {
+                 ComfyJS.Disconnect();
+             }
+             console.log("Disconnecting (via checkbox)...");
+             isConnected = false;
+             channelInput.disabled = false; // Re-enable input
+             confirmConnectCheckbox.disabled = false; // Ensure checkbox is enabled
+             showStatus('[Disconnected]');
+             // Clear handlers?
+             ComfyJS.onChat = null;
+             ComfyJS.onConnected = null;
+             ComfyJS.onError = null;
         }
+
 
         function loadVoices() {
             try {
@@ -343,18 +425,22 @@
                 const matchedVoices = [];
                 for (const systemVoice of systemVoices) {
                     const voiceName = `${systemVoice.name} (${systemVoice.lang})`;
-                    if (voices.includes(voiceName)) {
-                        matchedVoices.push(systemVoice);
+                    // Compare against the fixed list of desired names
+                    if (desiredVoiceNames.includes(voiceName)) {
+                        matchedVoices.push(systemVoice); // Add the actual voice object
                     }
                 }
                 
-                if (matchedVoices.length === 0) {
-                    showError('No matching voices found. Available voices: ' + 
-                        systemVoices.map(v => `${v.name} (${v.lang})`).join(', '));
-                    return;
-                }
-                
+                // Overwrite the global 'voices' array with the matched objects
                 voices = matchedVoices;
+
+                if (voices.length === 0) {
+                    // Log warning if no matches, but don't return (showStatus will indicate 0)
+                    console.warn('No matching voices found from the predefined list. Speech synthesis will not function. Available system voices:',
+                        systemVoices.map(v => `${v.name} (${v.lang})`).join(', '));
+                }
+                // No 'else' needed, 'voices' is already assigned above
+                // Note: The duplicate line was already removed previously.
                 showStatus(`${voices.length} voices loaded and ready for chat`);
                 console.log('Loaded voices:', voices.map(v => `${v.name} (${v.lang})`));
             } catch (e) {
@@ -363,51 +449,94 @@
             }
         }
         
-        function loadMutedUsers(){
-            const mutedUsersInput = document.getElementById('mutedUsers');
-            const confirmCheckbox = document.getElementById('confirmMuted');
-            
-            if (confirmCheckbox.checked) {
-                const mutedUsersInputValue = mutedUsersInput.value || ''; // Ensure value is not null or undefined
-                mutedUsers = new Set(mutedUsersInputValue.toLowerCase().split(',').map(user => user.trim()).filter(user => user));
-                showStatus(`Muted users updated: ${Array.from(mutedUsers).join(', ')}`);
-            } else {
-                mutedUsers.clear();
-            }
+        function loadMutedUsers() {
+            const mutedUsersInputValue = mutedUsersInput.value || ''; // Ensure value is not null or undefined
+            mutedUsers = new Set(mutedUsersInputValue.toLowerCase().split(',').map(user => user.trim()).filter(user => user));
+
+            // Update display
+            const mutedListString = Array.from(mutedUsers).join(', ');
+            mutedUsersDisplay.textContent = mutedListString ? `Currently Muted: ${mutedListString}` : 'No users currently muted.';
+
+            showStatus(`Muted users updated.`);
+            console.log('Muted users:', mutedUsers);
         }
-        
-        // Event listeners
-        document.getElementById('mutedUsers').addEventListener('input', () => {
-            document.getElementById('confirmMuted').checked = false;
-            mutedUsers.clear();
-        });
-        
-        document.getElementById('confirmMuted').addEventListener('change', loadMutedUsers);
 
-        document.getElementById('channel').addEventListener('input', () => {
-            document.getElementById('confirmConnect').checked = false;
-        });
-
-        document.getElementById('confirmConnect').addEventListener('change', (e) => {
-            if (e.target.checked) {
-                const channel = document.getElementById('channel').value.toLowerCase();
-                if (!channel) {
-                    showError('Please enter a channel name');
-                    e.target.checked = false;
-                    return;
-                }
-                connectToTwitch();
-            }
-        });
-
+        // --- Initial Setup ---
         if (synthesis) {
+            // Attach voice loading logic
             if (synthesis.onvoiceschanged !== undefined) {
                 synthesis.onvoiceschanged = loadVoices;
             }
-            setTimeout(loadVoices, 100); // Add a small delay to ensure voices are loaded
+            // Attempt to load voices immediately or after a delay
+            if (synthesis.getVoices().length > 0) {
+                loadVoices();
+            } else {
+                setTimeout(loadVoices, 150); // Fallback delay
+            }
+
+            // Load initial muted users state
             loadMutedUsers();
+
+            // --- Attach Event Listeners --- (Inside the synthesis check)
+
+            // Re-add listener for channel input to uncheck connect box
+            if (channelInput && confirmConnectCheckbox) {
+                 channelInput.addEventListener('input', () => {
+                     // Only allow unchecking if not currently connected
+                     if (!isConnected) {
+                         confirmConnectCheckbox.checked = false;
+                     }
+                 });
+            }
+
+            // Re-add listener for connect checkbox change
+            if (confirmConnectCheckbox) {
+                confirmConnectCheckbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        // Connect
+                        const channel = channelInput.value.trim().toLowerCase();
+                        if (!channel) {
+                            showError('Please enter a channel name');
+                            e.target.checked = false; // Uncheck if no channel
+                            return;
+                        }
+                        connectToTwitch(channel);
+                    } else {
+                        // Disconnect only if we were actually connected
+                        if (isConnected) {
+                             disconnectFromTwitch();
+                        }
+                    }
+                });
+            } else {
+                 console.error("Confirm Connect checkbox not found");
+            }
+
+
+            // Keep listeners for other buttons
+            if (updateMutedBtn) {
+                updateMutedBtn.addEventListener('click', loadMutedUsers);
+            } else {
+                console.error("Update Muted button not found");
+            }
+
+            if (clearChatBtn) {
+                clearChatBtn.addEventListener('click', () => {
+                    if (chatDisplay) chatDisplay.innerHTML = '';
+                    showStatus('[Chat Cleared]');
+                });
+            } else {
+                console.error("Clear Chat button not found");
+            }
+
         } else {
-            showError('Speech synthesis not supported in this browser');
+            // Handle case where speech synthesis is not supported
+            showError('Speech synthesis not supported in this browser. Cannot run application.');
+            // Disable controls if synthesis not supported
+            // Note: connectBtn is no longer cached or used here
+            [confirmConnectCheckbox, updateMutedBtn, clearChatBtn, channelInput, mutedUsersInput, rateSlider, pitchSlider, volumeSlider].forEach(el => {
+                if (el) el.disabled = true;
+            });
         }
     </script>
 </body>
