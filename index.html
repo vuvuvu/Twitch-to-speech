@@ -219,7 +219,7 @@
     </div>
     <div class="control-group">
         <label for="pitch">Pitch:</label>
-        <input type="range" id="pitch" min="0" max="2" value="1" step="0.5">
+        <input type="range" id="pitch" min="0" max="2" value="0.8" step="0.4">
     </div>
     <div class="control-group">
         <label for="volume">Volume:</label> <input type="range" id="volume" min="0" max="1" value="0.8" step="0.2">
@@ -228,7 +228,7 @@
     <div class="muted-users">
         <div class="muted-users-input">
             <label for="mutedUsers">Muted Users:</label>
-            <input type="text" id="mutedUsers" placeholder="streamelements, songlistbot, nightbot">
+            <input type="text" id="mutedUsers" placeholder="streamelements, songlistbot, nightbot" value="streamelements">
             <button id="updateMutedBtn">Update Muted List</button>
         </div>
         <div id="mutedUsersDisplay" class="muted-users-list"></div>
@@ -483,7 +483,7 @@
 
             // Modified ComfyJS.onChat handler (now uses speakMessage)
             ComfyJS.onChat = (user, message, flags, self, extra) => {
-                if (mutedUsers.has(user)) return;
+                if (mutedUsers.has(user.toLowerCase())) return; // Check lowercase user
 
                 const chatMessage = document.createElement('div');
                 chatMessage.className = 'chat-message';
