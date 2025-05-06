@@ -194,6 +194,14 @@
         .chat-message.speaking .user {
              color: white; /* Ensure user name is visible */
         }
+
+        #twitchPlayerEmbed {
+            width: 100%;
+            aspect-ratio: 16 / 9; /* Maintain 16:9 aspect ratio */
+            border: none; /* Remove default iframe border */
+            margin-bottom: 1rem; /* Add some space below it */
+            display: none; /* Initially hidden */
+        }
     </style>
 </head>
 <body>
@@ -211,6 +219,8 @@
 
     <div id="error"></div>
     <div id="status"></div>
+
+    <iframe id="twitchPlayerEmbed" src="about:blank" title="Twitch Player Embed" style="border:none;"></iframe>
     <div class="chat-display" id="chatDisplay">
         <!-- Chat messages will appear here -->
     </div>
@@ -519,6 +529,12 @@
                 connectBtn.disabled = false; // Enable button for disconnect
                 connectBtn.textContent = 'Disconnect';
                 showStatus(`[Connected] to ${channel}`);
+
+                const twitchPlayer = document.getElementById('twitchPlayerEmbed');
+                if (twitchPlayer) {
+                    twitchPlayer.src = `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&autoplay=false`;
+                    twitchPlayer.style.display = 'block';
+                }
             };
 
             ComfyJS.onError = (err) => {
@@ -562,6 +578,13 @@
                  return;
              }
              console.log("Disconnecting...");
+
+             const twitchPlayer = document.getElementById('twitchPlayerEmbed');
+             if (twitchPlayer) {
+                 twitchPlayer.src = 'about:blank';
+                 twitchPlayer.style.display = 'none';
+             }
+
              if (typeof ComfyJS.Disconnect === 'function') {
                  ComfyJS.Disconnect(); // ComfyJS handles the state change via onDisconnected
              } else {
