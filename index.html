@@ -195,26 +195,13 @@
              color: white; /* Ensure user name is visible */
         }
 
-       /* Styles for Twitch Embed */
-       #twitch-embed-container {
-           position: relative;
-           width: 100%;
-           padding-top: 56.25%; /* 16:9 Aspect Ratio (height/width * 100) */
-           margin-bottom: 1rem; /* Space below the embed */
-           background: #18181b; /* Dark background */
-           border-radius: 4px;
-           overflow: hidden; /* Keep iframe contained */
-           display: none; /* Hidden by default */
-       }
-
-       #twitch-embed-container iframe {
-           position: absolute;
-           top: 0;
-           left: 0;
-           width: 100%;
-           height: 100%;
-           border: none; /* Remove iframe border */
-       }
+        #twitchPlayerEmbed {
+            width: 100%;
+            aspect-ratio: 16 / 9; /* Maintain 16:9 aspect ratio */
+            border: none; /* Remove default iframe border */
+            margin-bottom: 1rem; /* Add some space below it */
+            display: none; /* Initially hidden */
+        }
     </style>
 </head>
 <body>
@@ -223,8 +210,7 @@
         <i><p>v1.4.1 made with 💩 by <a href="https://github.com/vuvuvu" target="_blank" rel="noopener"><b>vU_Vu</b></a></i></p>
     </div>
 
-    <!-- Container for the Twitch Embed -->
-    <div id="twitch-embed-container"></div>
+    <!-- Twitch Player Embed is defined below -->
 
     <div class="twitch-connect">
         <label for="channel">Twitch Channel:</label>
@@ -235,6 +221,8 @@
 
     <div id="error"></div>
     <div id="status"></div>
+
+    <iframe id="twitchPlayerEmbed" src="about:blank" title="Twitch Player Embed" style="border:none;"></iframe>
     <div class="chat-display" id="chatDisplay">
         <!-- Chat messages will appear here -->
     </div>
@@ -243,7 +231,7 @@
     </div>
     <div class="control-group">
         <label for="pitch">Pitch:</label>
-        <input type="range" id="pitch" min="0" max="2.5" value="1" step="0.5">
+        <input type="range" id="pitch" min="0" max="2" value="0.8" step="0.4">
     </div>
     <div class="control-group">
         <label for="volume">Volume:</label> <input type="range" id="volume" min="0" max="1" value="0.8" step="0.2">
@@ -296,7 +284,7 @@
         const updateMutedBtn = document.getElementById('updateMutedBtn');
         const mutedUsersDisplay = document.getElementById('mutedUsersDisplay');
         const clearChatBtn = document.getElementById('clearChatBtn');
-        const twitchEmbedContainer = document.getElementById('twitch-embed-container'); // Get embed container
+        // Using twitchPlayerEmbed instead of twitchEmbedContainer
         const MAX_CHAT_MESSAGES = 150; // Define max messages
 
         function showError(message) {
@@ -545,19 +533,11 @@
                 connectBtn.textContent = 'Disconnect';
                 showStatus(`[Connected] to ${channel}`);
 
-                // --- Add Twitch Embed ---
-                if (twitchEmbedContainer) {
-                    twitchEmbedContainer.innerHTML = ''; // Clear previous embed
-                    const iframe = document.createElement('iframe');
-                    // IMPORTANT: Twitch requires the 'parent' parameter matching the domain.
-                    const parentDomain = window.location.hostname || 'localhost'; // Use hostname or localhost for dev
-                    iframe.src = `https://player.twitch.tv/?channel=${channel}&parent=${parentDomain}&autoplay=false&muted=true`; // Muted by default is often better UX
-                    iframe.setAttribute('allowfullscreen', 'true');
-                    // Width/height are handled by CSS aspect-ratio trick
-                    twitchEmbedContainer.appendChild(iframe);
-                    twitchEmbedContainer.style.display = 'block'; // Show the container
-                }
-                // --- End Add Twitch Embed ---
+        const twitchPlayer = document.getElementById('twitchPlayerEmbed');
+        if (twitchPlayer) {
+            twitchPlayer.src = `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&autoplay=false`;
+            twitchPlayer.style.display = 'block';
+        }
             };
 
             ComfyJS.onError = (err) => {
@@ -601,9 +581,16 @@
                  return;
              }
              console.log("Disconnecting...");
-             if (typeof ComfyJS.Disconnect === 'function') {
-                 ComfyJS.Disconnect(); // ComfyJS handles the state change via onDisconnected
-             } else {
+
+        const twitchPlayer = document.getElementById('twitchPlayerEmbed');
+        if (twitchPlayer) {
+            twitchPlayer.src = 'about:blank';
+            twitchPlayer.style.display = 'none';
+        }
+
+            if (typeof ComfyJS.Disconnect === 'function') {
+                ComfyJS.Disconnect(); // ComfyJS handles the state change via onDisconnected
+            } else {
                  // Manual fallback if Disconnect isn't available (should be)
                  isConnected = false;
                  channelInput.disabled = false;
@@ -615,12 +602,7 @@
                  synthesis.cancel();
              }
  
-             // --- Remove Twitch Embed ---
-             if (twitchEmbedContainer) {
-                 twitchEmbedContainer.innerHTML = ''; // Clear the embed
-                 twitchEmbedContainer.style.display = 'none'; // Hide the container
-             }
-             // --- End Remove Twitch Embed ---
+             // Twitch player is already handled above with twitchPlayerEmbed
          }
  
  
@@ -632,12 +614,11 @@
                  [connectBtn, updateMutedBtn, clearChatBtn, channelInput, mutedUsersInput, rateSlider, pitchSlider, volumeSlider].forEach(el => {
                      if (el) el.disabled = true;
                  });
-                if (twitchEmbedContainer) twitchEmbedContainer.style.display = 'none'; // Also hide embed container on error
+                // Twitch player embed is handled separately
                 return;
             }
 
-            // Hide embed container initially
-            if (twitchEmbedContainer) twitchEmbedContainer.style.display = 'none';
+            // Twitch player embed is initially hidden via CSS
 
             try {
                 showStatus('Initializing...');
@@ -733,7 +714,7 @@
                  [connectBtn, updateMutedBtn, clearChatBtn, channelInput, mutedUsersInput, rateSlider, pitchSlider, volumeSlider].forEach(el => {
                      if (el) el.disabled = true;
                  });
-                if (twitchEmbedContainer) twitchEmbedContainer.style.display = 'none'; // Hide embed on init error
+                // Twitch player embed remains hidden on init error
             }
         }
 
