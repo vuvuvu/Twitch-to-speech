@@ -530,11 +530,11 @@
                 connectBtn.textContent = 'Disconnect';
                 showStatus(`[Connected] to ${channel}`);
 
-                const twitchPlayer = document.getElementById('twitchPlayerEmbed');
-                if (twitchPlayer) {
-                    twitchPlayer.src = `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&autoplay=false`;
-                    twitchPlayer.style.display = 'block';
-                }
+        const twitchPlayer = document.getElementById('twitchPlayerEmbed');
+        if (twitchPlayer) {
+            twitchPlayer.src = `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&autoplay=false`;
+            twitchPlayer.style.display = 'block';
+        }
             };
 
             ComfyJS.onError = (err) => {
