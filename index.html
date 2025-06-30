@@ -585,9 +585,9 @@
             twitchPlayer.style.display = 'none';
         }
 
-             if (typeof ComfyJS.Disconnect === 'function') {
-                 ComfyJS.Disconnect(); // ComfyJS handles the state change via onDisconnected
-             } else {
+            if (typeof ComfyJS.Disconnect === 'function') {
+                ComfyJS.Disconnect(); // ComfyJS handles the state change via onDisconnected
+            } else {
                  // Manual fallback if Disconnect isn't available (should be)
                  isConnected = false;
                  channelInput.disabled = false;
