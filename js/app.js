@@ -146,7 +146,7 @@ class TTSApp {
             this.chatPanelOpen = true;
             chatPanel?.classList.add('active');
             chatPanelOverlay?.classList.add('active');
-            document.body.style.overflow = 'hidden';
+            document.body.classList.add('chat-panel-open');
         }
     }
 
