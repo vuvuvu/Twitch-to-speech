@@ -346,8 +346,8 @@ class TTSApp {
         const statusElement = document.getElementById('chatPanelStatus');
         if (statusElement) {
             statusElement.textContent = status;
-            statusElement.className = 'chat-panel-status ' + 
-                (status.includes('Connected') ? 'connected' : 'disconnected');
+            statusElement.classList.remove('connected', 'disconnected');
+            statusElement.classList.add(status.includes('Connected') ? 'connected' : 'disconnected');
         }
     }
 
