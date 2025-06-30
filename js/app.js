@@ -34,6 +34,9 @@ class TTSApp {
             // Set up mobile audio unlock if needed
             this.setupMobileAudioUnlock();
             
+            // Set up navigation
+            this.setupNavigation();
+            
             this.isInitialized = true;
             this.uiManager.showStatus('Application ready!');
             
@@ -41,6 +44,49 @@ class TTSApp {
             console.error('Initialization error:', error);
             this.uiManager.showError(`Initialization failed: ${error.message}`);
         }
+    }
+
+    setupNavigation() {
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.querySelector('.nav-links');
+        
+        // Mobile menu toggle
+        navToggle?.addEventListener('click', () => {
+            navToggle.classList.toggle('active');
+            navLinks?.classList.toggle('active');
+        });
+
+        // Close mobile menu when clicking a link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                navToggle?.classList.remove('active');
+                navLinks?.classList.remove('active');
+            });
+        });
+
+        // Update active nav link on scroll
+        const sections = document.querySelectorAll('.section');
+        const navLinksArray = document.querySelectorAll('.nav-link');
+
+        const updateActiveNavLink = () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (window.pageYOffset >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinksArray.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        };
+
+        window.addEventListener('scroll', updateActiveNavLink);
+        updateActiveNavLink(); // Initial call
     }
 
     setupEventListeners() {
@@ -157,7 +203,7 @@ class TTSApp {
                 setTimeout(() => unlockButton.remove(), 2000);
             };
 
-            document.body.insertBefore(unlockButton, document.querySelector('.twitch-connect'));
+            document.querySelector('.main-content').insertBefore(unlockButton, document.querySelector('.header-text'));
         }
     }
 

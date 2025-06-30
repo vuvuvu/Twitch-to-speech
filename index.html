@@ -8,78 +8,112 @@
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <div class="header-text">
-        <h1>Twitch Chat Text-to-Speech</h1>
-        <i><p>made with 💩 by <a href="https://github.com/vuvuvu" target="_blank" rel="noopener"><b>vU_Vu</b></a></i></p>
-    </div>
-
-    <div class="twitch-connect">
-        <label for="channel">Twitch Channel:</label>
-        <input type="text" id="channel" placeholder="Enter channel name">
-        <button id="connectBtn">Connect</button>
-    </div>
-
-    <div id="error" class="message-display"></div>
-    <div id="status" class="message-display"></div>
-    
-    <div class="chat-display" id="chatDisplay">
-        <!-- Chat messages will appear here -->
-    </div>
-
-    <div class="controls-section">
-        <div class="control-group">
-            <label for="rate">Rate: <span id="rateValue">1.0</span></label>
-            <input type="range" id="rate" min="0.5" max="2.0" value="1.0" step="0.1">
-        </div>
-        <div class="control-group">
-            <label for="pitch">Pitch: <span id="pitchValue">0.8</span></label>
-            <input type="range" id="pitch" min="0" max="2" value="0.8" step="0.1">
-        </div>
-        <div class="control-group">
-            <label for="volume">Volume: <span id="volumeValue">0.8</span></label>
-            <input type="range" id="volume" min="0" max="1" value="0.8" step="0.1">
-        </div>
-        <div class="control-group">
-            <label for="voiceSelect">Voice:</label>
-            <select id="voiceSelect">
-                <option value="random">Random Assignment</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="muted-users">
-        <div class="muted-users-input">
-            <label for="mutedUsers">Muted Users:</label>
-            <input type="text" id="mutedUsers" placeholder="streamelements, songlistbot, nightbot" value="streamelements">
-            <button id="updateMutedBtn">Update</button>
-        </div>
-        <div id="mutedUsersDisplay" class="muted-users-list"></div>
-    </div>
-
-    <div class="action-buttons">
-        <button id="pauseBtn">Pause TTS</button>
-        <button id="clearQueueBtn">Clear Queue</button>
-        <button id="clearChatBtn">Clear Chat</button>
-        <button id="exportSettingsBtn">Export Settings</button>
-        <input type="file" id="importSettingsInput" accept=".json" style="display: none;">
-        <button id="importSettingsBtn">Import Settings</button>
-    </div>
-
-    <div class="stats-section">
-        <div class="stats-grid">
-            <div class="stat-item">
-                <span class="stat-label">Messages:</span>
-                <span id="messageCount">0</span>
+    <!-- Permanent Navigation Header -->
+    <nav class="nav-header">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="nav-logo">🎤</span>
+                <span class="nav-title">TTS Chat</span>
             </div>
-            <div class="stat-item">
-                <span class="stat-label">Queue:</span>
-                <span id="queueCount">0</span>
+            <div class="nav-links">
+                <a href="#connect" class="nav-link">Connect</a>
+                <a href="#chat" class="nav-link">Chat</a>
+                <a href="#controls" class="nav-link">Controls</a>
+                <a href="#settings" class="nav-link">Settings</a>
+                <a href="#stats" class="nav-link">Stats</a>
             </div>
-            <div class="stat-item">
-                <span class="stat-label">Users:</span>
-                <span id="userCount">0</span>
-            </div>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="header-text">
+            <h1>Twitch Chat Text-to-Speech</h1>
+            <i><p>made with 💩 by <a href="https://github.com/vuvuvu" target="_blank" rel="noopener"><b>vU_Vu</b></a></i></p>
+        </div>
+
+        <section id="connect" class="section">
+            <div class="twitch-connect">
+                <label for="channel">Twitch Channel:</label>
+                <input type="text" id="channel" placeholder="Enter channel name">
+                <button id="connectBtn">Connect</button>
+            </div>
+
+            <div id="error" class="message-display"></div>
+            <div id="status" class="message-display"></div>
+        </section>
+        
+        <section id="chat" class="section">
+            <div class="chat-display" id="chatDisplay">
+                <!-- Chat messages will appear here -->
+            </div>
+        </section>
+
+        <section id="controls" class="section">
+            <div class="controls-section">
+                <div class="control-group">
+                    <label for="rate">Rate: <span id="rateValue">1.0</span></label>
+                    <input type="range" id="rate" min="0.5" max="2.0" value="1.0" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label for="pitch">Pitch: <span id="pitchValue">0.8</span></label>
+                    <input type="range" id="pitch" min="0" max="2" value="0.8" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label for="volume">Volume: <span id="volumeValue">0.8</span></label>
+                    <input type="range" id="volume" min="0" max="1" value="0.8" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label for="voiceSelect">Voice:</label>
+                    <select id="voiceSelect">
+                        <option value="random">Random Assignment</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <section id="settings" class="section">
+            <div class="muted-users">
+                <div class="muted-users-input">
+                    <label for="mutedUsers">Muted Users:</label>
+                    <input type="text" id="mutedUsers" placeholder="streamelements, songlistbot, nightbot" value="streamelements">
+                    <button id="updateMutedBtn">Update</button>
+                </div>
+                <div id="mutedUsersDisplay" class="muted-users-list"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="pauseBtn">Pause TTS</button>
+                <button id="clearQueueBtn">Clear Queue</button>
+                <button id="clearChatBtn">Clear Chat</button>
+                <button id="exportSettingsBtn">Export Settings</button>
+                <input type="file" id="importSettingsInput" accept=".json" style="display: none;">
+                <button id="importSettingsBtn">Import Settings</button>
+            </div>
+        </section>
+
+        <section id="stats" class="section">
+            <div class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Messages:</span>
+                        <span id="messageCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Queue:</span>
+                        <span id="queueCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Users:</span>
+                        <span id="userCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 
     <script type="module" src="js/app.js"></script>
