@@ -2,12 +2,14 @@ export class UIManager {
     constructor() {
         this.maxChatMessages = 150;
         this.chatDisplay = null;
+        this.chatPanelDisplay = null;
         this.errorDiv = null;
         this.statusDiv = null;
     }
 
     initialize() {
         this.chatDisplay = document.getElementById('chatDisplay');
+        this.chatPanelDisplay = document.getElementById('chatPanelDisplay');
         this.errorDiv = document.getElementById('error');
         this.statusDiv = document.getElementById('status');
     }
@@ -34,8 +36,47 @@ export class UIManager {
     }
 
     addChatMessage(user, message) {
-        if (!this.chatDisplay) return null;
+        const chatElement = this.createChatMessage(user, message);
+        
+        if (this.chatDisplay) {
+            this.chatDisplay.appendChild(chatElement);
 
+            // Limit chat messages
+            while (this.chatDisplay.children.length > this.maxChatMessages) {
+                this.chatDisplay.removeChild(this.chatDisplay.firstChild);
+            }
+
+            // Auto-scroll to bottom
+            this.chatDisplay.scrollTop = this.chatDisplay.scrollHeight;
+        }
+
+        return chatElement;
+    }
+
+    addChatPanelMessage(user, message) {
+        if (!this.chatPanelDisplay) return;
+
+        // Remove placeholder if it exists
+        const placeholder = this.chatPanelDisplay.querySelector('.chat-panel-placeholder');
+        if (placeholder) {
+            placeholder.remove();
+        }
+
+        const chatElement = this.createChatMessage(user, message);
+        chatElement.classList.add('chat-panel-message');
+        
+        this.chatPanelDisplay.appendChild(chatElement);
+
+        // Limit chat messages in panel
+        while (this.chatPanelDisplay.children.length > this.maxChatMessages) {
+            this.chatPanelDisplay.removeChild(this.chatPanelDisplay.firstChild);
+        }
+
+        // Auto-scroll to bottom
+        this.chatPanelDisplay.scrollTop = this.chatPanelDisplay.scrollHeight;
+    }
+
+    createChatMessage(user, message) {
         const chatMessage = document.createElement('div');
         chatMessage.className = 'chat-message';
         
@@ -43,22 +84,23 @@ export class UIManager {
         const sanitizedMessage = this.sanitizeHTML(message);
         chatMessage.innerHTML = `<span class="user">${this.sanitizeHTML(user)}:</span> ${sanitizedMessage}`;
         
-        this.chatDisplay.appendChild(chatMessage);
-
-        // Limit chat messages
-        while (this.chatDisplay.children.length > this.maxChatMessages) {
-            this.chatDisplay.removeChild(this.chatDisplay.firstChild);
-        }
-
-        // Auto-scroll to bottom
-        this.chatDisplay.scrollTop = this.chatDisplay.scrollHeight;
-
         return chatMessage;
     }
 
     clearChat() {
         if (this.chatDisplay) {
             this.chatDisplay.innerHTML = '';
+        }
+    }
+
+    clearChatPanel() {
+        if (this.chatPanelDisplay) {
+            this.chatPanelDisplay.innerHTML = `
+                <div class="chat-panel-placeholder">
+                    <span class="placeholder-icon">💬</span>
+                    <p>Connect to a Twitch channel to see live chat messages</p>
+                </div>
+            `;
         }
     }
 

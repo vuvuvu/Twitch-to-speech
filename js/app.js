@@ -13,6 +13,7 @@ class TTSApp {
         this.statsManager = new StatsManager();
         
         this.isInitialized = false;
+        this.chatPanelOpen = false;
     }
 
     async initialize() {
@@ -34,12 +35,136 @@ class TTSApp {
             // Set up mobile audio unlock if needed
             this.setupMobileAudioUnlock();
             
+            // Set up navigation
+            this.setupNavigation();
+            
+            // Set up chat panel
+            this.setupChatPanel();
+            
             this.isInitialized = true;
             this.uiManager.showStatus('Application ready!');
             
         } catch (error) {
             console.error('Initialization error:', error);
             this.uiManager.showError(`Initialization failed: ${error.message}`);
+        }
+    }
+
+    setupNavigation() {
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.querySelector('.nav-links');
+        
+        // Mobile menu toggle
+        navToggle?.addEventListener('click', () => {
+            navToggle.classList.toggle('active');
+            navLinks?.classList.toggle('active');
+        });
+
+        // Close mobile menu when clicking a link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                navToggle?.classList.remove('active');
+                navLinks?.classList.remove('active');
+            });
+        });
+
+        // Update active nav link on scroll
+        const sections = document.querySelectorAll('.section');
+        const navLinksArray = document.querySelectorAll('.nav-link');
+
+        const updateActiveNavLink = () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (window.pageYOffset >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinksArray.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        };
+
+        window.addEventListener('scroll', updateActiveNavLink);
+        updateActiveNavLink(); // Initial call
+    }
+
+    setupChatPanel() {
+        const chatToggle = document.getElementById('chatToggle');
+        const chatPanel = document.getElementById('chatPanel');
+        const chatPanelClose = document.getElementById('chatPanelClose');
+        const chatPanelOverlay = document.getElementById('chatPanelOverlay');
+        const chatClearBtn = document.getElementById('chatClearBtn');
+        const chatPauseBtn = document.getElementById('chatPauseBtn');
+
+        // Toggle chat panel
+        chatToggle?.addEventListener('click', () => {
+            this.toggleChatPanel();
+        });
+
+        // Close chat panel
+        chatPanelClose?.addEventListener('click', () => {
+            this.closeChatPanel();
+        });
+
+        // Close on overlay click
+        chatPanelOverlay?.addEventListener('click', () => {
+            this.closeChatPanel();
+        });
+
+        // Chat panel controls
+        chatClearBtn?.addEventListener('click', () => {
+            this.uiManager.clearChatPanel();
+            this.uiManager.clearChat();
+            this.statsManager.reset();
+        });
+
+        chatPauseBtn?.addEventListener('click', () => {
+            this.ttsManager.togglePause();
+            this.updateChatPanelPauseButton();
+        });
+
+        // Close panel on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.chatPanelOpen) {
+                this.closeChatPanel();
+            }
+        });
+    }
+
+    toggleChatPanel() {
+        const chatPanel = document.getElementById('chatPanel');
+        const chatPanelOverlay = document.getElementById('chatPanelOverlay');
+        
+        if (this.chatPanelOpen) {
+            this.closeChatPanel();
+        } else {
+            this.chatPanelOpen = true;
+            chatPanel?.classList.add('active');
+            chatPanelOverlay?.classList.add('active');
+            document.body.classList.add('chat-panel-open');
+        }
+    }
+
+    closeChatPanel() {
+        const chatPanel = document.getElementById('chatPanel');
+        const chatPanelOverlay = document.getElementById('chatPanelOverlay');
+        
+        this.chatPanelOpen = false;
+        chatPanel?.classList.remove('active');
+        chatPanelOverlay?.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    updateChatPanelPauseButton() {
+        const button = document.getElementById('chatPauseBtn');
+        if (button) {
+            button.textContent = this.ttsManager.isPaused ? '▶️' : '⏸️';
+            button.title = this.ttsManager.isPaused ? 'Resume TTS' : 'Pause TTS';
         }
     }
 
@@ -53,6 +178,7 @@ class TTSApp {
         document.getElementById('pauseBtn').addEventListener('click', () => {
             this.ttsManager.togglePause();
             this.updatePauseButton();
+            this.updateChatPanelPauseButton();
         });
 
         document.getElementById('clearQueueBtn').addEventListener('click', () => {
@@ -81,6 +207,7 @@ class TTSApp {
         // Chat events
         document.getElementById('clearChatBtn').addEventListener('click', () => {
             this.uiManager.clearChat();
+            this.uiManager.clearChatPanel();
             this.statsManager.reset();
         });
 
@@ -101,17 +228,20 @@ class TTSApp {
         this.twitchConnection.on('connected', (channel) => {
             this.uiManager.showStatus(`Connected to ${channel}`);
             this.uiManager.setConnectionState(true);
+            this.updateChatPanelStatus(`Connected to ${channel}`);
         });
 
         this.twitchConnection.on('disconnected', (reason) => {
             this.uiManager.showStatus(`Disconnected: ${reason}`);
             this.uiManager.setConnectionState(false);
             this.ttsManager.clearQueue();
+            this.updateChatPanelStatus('Disconnected');
         });
 
         this.twitchConnection.on('error', (error) => {
             this.uiManager.showError(`Connection error: ${error}`);
             this.uiManager.setConnectionState(false);
+            this.updateChatPanelStatus('Connection Error');
         });
 
         this.twitchConnection.on('message', (user, message, flags, self, extra) => {
@@ -157,7 +287,7 @@ class TTSApp {
                 setTimeout(() => unlockButton.remove(), 2000);
             };
 
-            document.body.insertBefore(unlockButton, document.querySelector('.twitch-connect'));
+            document.querySelector('.main-content').insertBefore(unlockButton, document.querySelector('.header-text'));
         }
     }
 
@@ -180,12 +310,14 @@ class TTSApp {
             return;
         }
 
-        // Add message to chat display
+        // Add message to both chat displays
         const chatElement = this.uiManager.addChatMessage(user, message);
+        this.uiManager.addChatPanelMessage(user, message);
         
         // Update stats
         this.statsManager.incrementMessageCount();
         this.statsManager.addUser(user);
+        this.updateChatIndicator();
 
         // Queue for TTS
         const settings = this.settingsManager.getSettings();
@@ -208,6 +340,25 @@ class TTSApp {
     updatePauseButton() {
         const button = document.getElementById('pauseBtn');
         button.textContent = this.ttsManager.isPaused ? 'Resume TTS' : 'Pause TTS';
+    }
+
+    updateChatPanelStatus(status) {
+        const statusElement = document.getElementById('chatPanelStatus');
+        if (statusElement) {
+            statusElement.textContent = status;
+            statusElement.classList.remove('connected', 'disconnected');
+            statusElement.classList.add(status.includes('Connected') ? 'connected' : 'disconnected');
+        }
+    }
+
+    updateChatIndicator() {
+        const indicator = document.getElementById('chatIndicator');
+        if (indicator) {
+            indicator.textContent = this.statsManager.messageCount;
+            if (this.statsManager.messageCount > 0) {
+                indicator.classList.add('active');
+            }
+        }
     }
 }
 

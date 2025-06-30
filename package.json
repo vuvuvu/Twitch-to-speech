@@ -4,9 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "http-server . -p 3000 -o",
+    "build": "echo 'No build step required for this static site. Files are ready for deployment.'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
 }
