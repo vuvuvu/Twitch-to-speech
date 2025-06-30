@@ -579,11 +579,11 @@
              }
              console.log("Disconnecting...");
 
-             const twitchPlayer = document.getElementById('twitchPlayerEmbed');
-             if (twitchPlayer) {
-                 twitchPlayer.src = 'about:blank';
-                 twitchPlayer.style.display = 'none';
-             }
+        const twitchPlayer = document.getElementById('twitchPlayerEmbed');
+        if (twitchPlayer) {
+            twitchPlayer.src = 'about:blank';
+            twitchPlayer.style.display = 'none';
+        }
 
              if (typeof ComfyJS.Disconnect === 'function') {
                  ComfyJS.Disconnect(); // ComfyJS handles the state change via onDisconnected
