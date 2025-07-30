@@ -1,0 +1,30 @@
+{
+  "name": "twitch-tts-extension",
+  "version": "1.0.0",
+  "description": "A simplified Twitch Extension for Text-to-Speech chat reading",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "twitch",
+    "extension",
+    "tts",
+    "text-to-speech",
+    "chat",
+    "accessibility"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/twitch-tts-extension.git"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}

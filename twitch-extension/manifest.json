@@ -1,0 +1,28 @@
+{
+  "manifest_version": 1,
+  "type": "panel",
+  "name": "TTS Chat Reader",
+  "version": "1.0.0",
+  "description": "Text-to-Speech for Twitch chat messages with customizable voices and settings",
+  "author": "vU_Vu",
+  "icon_url": "assets/icon.png",
+  "screenshot_urls": [
+    "assets/screenshot1.png"
+  ],
+  "panel": {
+    "viewer_url": "panel.html",
+    "height": 300,
+    "can_link_external_content": false
+  },
+  "mobile": {
+    "panel_height": 250
+  },
+  "request_identity_link": false,
+  "sku": "tts-chat-reader",
+  "vendor_code": "tts-chat",
+  "support_email": "support@example.com",
+  "allowlisted_config_urls": [],
+  "allowlisted_panel_urls": [
+    "https://localhost:8080"
+  ]
+}

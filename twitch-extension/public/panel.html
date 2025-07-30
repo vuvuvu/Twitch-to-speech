@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Chat Reader</title>
+    <link rel="stylesheet" href="panel.css">
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+</head>
+<body>
+    <div class="extension-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="title">
+                <span class="icon">🎤</span>
+                <span>TTS Chat</span>
+            </div>
+            <div class="status" id="status">Ready</div>
+        </div>
+
+        <!-- Main Controls -->
+        <div class="controls">
+            <!-- Power Toggle -->
+            <div class="control-group">
+                <button class="power-btn" id="powerBtn" title="Toggle TTS">
+                    <span class="power-icon">⚡</span>
+                    <span class="power-text">Start TTS</span>
+                </button>
+            </div>
+
+            <!-- Voice Controls -->
+            <div class="control-group">
+                <label for="voiceSelect">Voice:</label>
+                <select id="voiceSelect" class="control-input">
+                    <option value="random">Random</option>
+                </select>
+            </div>
+
+            <!-- Volume Control -->
+            <div class="control-group">
+                <label for="volume">Volume: <span id="volumeValue">0.8</span></label>
+                <input type="range" id="volume" class="slider" min="0" max="1" value="0.8" step="0.1">
+            </div>
+
+            <!-- Rate Control -->
+            <div class="control-group">
+                <label for="rate">Speed: <span id="rateValue">1.0</span></label>
+                <input type="range" id="rate" class="slider" min="0.5" max="2.0" value="1.0" step="0.1">
+            </div>
+
+            <!-- Pitch Control -->
+            <div class="control-group">
+                <label for="pitch">Pitch: <span id="pitchValue">0.8</span></label>
+                <input type="range" id="pitch" class="slider" min="0" max="2" value="0.8" step="0.1">
+            </div>
+
+            <!-- Muted Users -->
+            <div class="control-group">
+                <label for="mutedUsers">Muted Users:</label>
+                <input type="text" id="mutedUsers" class="control-input" placeholder="user1, user2" value="streamelements">
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-btn" id="pauseBtn" title="Pause/Resume TTS">
+                    <span>⏸️</span> Pause
+                </button>
+                <button class="action-btn" id="clearBtn" title="Clear Speech Queue">
+                    <span>🗑️</span> Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Queue Status -->
+        <div class="queue-status">
+            <div class="queue-info">
+                <span>Queue: <span id="queueCount">0</span></span>
+                <span>•</span>
+                <span>Messages: <span id="messageCount">0</span></span>
+            </div>
+        </div>
+
+        <!-- Current Message Display -->
+        <div class="current-message" id="currentMessage">
+            <div class="message-placeholder">No message playing</div>
+        </div>
+    </div>
+
+    <script src="panel.js"></script>
+</body>
+</html>
