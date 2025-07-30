@@ -1,0 +1,56 @@
+{
+  "manifest_version": 1,
+  "type": "video_overlay",
+  "name": "TTS Chat Reader Pro",
+  "version": "1.0.0",
+  "description": "A beautiful floating video overlay that converts Twitch chat messages to speech with modern UI and advanced controls",
+  "author": {
+    "name": "vUvu",
+    "email": "contact@example.com"
+  },
+  "icon": {
+    "24x24": "assets/icon-24.png",
+    "100x100": "assets/icon-100.png"
+  },
+  "screenshots": [
+    {
+      "image": "assets/screenshot-1.png",
+      "description": "Floating TTS controls overlay"
+    },
+    {
+      "image": "assets/screenshot-2.png",
+      "description": "Advanced settings panel"
+    }
+  ],
+  "views": {
+    "video_overlay": {
+      "viewer_url": "video.html",
+      "can_link_external_content": false
+    },
+    "panel": {
+      "viewer_url": "panel.html",
+      "height": 600,
+      "can_link_external_content": false
+    },
+    "config": {
+      "viewer_url": "config.html",
+      "can_link_external_content": false
+    }
+  },
+  "whitelisted_config_urls": [
+    "https://localhost:3001",
+    "https://127.0.0.1:3001"
+  ],
+  "whitelisted_panel_urls": [
+    "https://localhost:3001",
+    "https://127.0.0.1:3001"
+  ],
+  "request_identity_link": false,
+  "sku": "",
+  "vendor_code": "",
+  "support_email": "support@example.com",
+  "summary": "Transform your Twitch chat experience with beautiful text-to-speech functionality",
+  "installation_instructions": "Click install and configure your TTS preferences in the extension panel.",
+  "privacy_policy_url": "https://example.com/privacy",
+  "terms_of_service_url": "https://example.com/terms"
+}
